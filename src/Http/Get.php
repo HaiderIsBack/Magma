@@ -6,7 +6,7 @@ use Attribute;
 use Magma\Http\Route;
 
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]  
-class GET extends Route {
+class Get extends Route {
     public function __construct
     (
         public string $path
