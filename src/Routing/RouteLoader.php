@@ -4,6 +4,7 @@ namespace Magma\Routing;
 
 use ReflectionClass;
 use Magma\Routing\Route;
+use Magma\Http\Group;
 use Magma\Http\Get;
 use Magma\Http\Post;
 use RuntimeException;
@@ -21,6 +22,15 @@ final class RouteLoader
 
         foreach ($controllers as $controller) {
             $reflection = new ReflectionClass($controller);
+
+            $groupAttributes = $reflection->getAttributes(Group::class);
+
+            $prefix = '';
+
+            if ($groupAttributes !== []) {
+                $group = $groupAttributes[0]->newInstance();
+                $prefix = $group->prefix;
+            }
 
             foreach ($reflection->getMethods() as $method) {
                 if (
@@ -44,9 +54,18 @@ final class RouteLoader
                     foreach ($method->getAttributes($attributeClass) as $attribute) {
                         $route = $attribute->newInstance();
 
+                        $path = $route->path;
+
+                        if (trim($prefix) !== '') {
+                            $path = '/' . trim(
+                                $prefix . '/' . ltrim($route->path, '/'),
+                                '/'
+                            );
+                        }
+
                         $routes[] = new Route(
                             $httpMethod,
-                            $route->path,
+                            $path,
                             $controller,
                             $method->getName()
                         );
