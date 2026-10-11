@@ -2,37 +2,82 @@
 
 namespace Magma\Routing;
 
+use Magma\Http\Request;
+use ReflectionMethod;
+use ReflectionNamedType;
+use RuntimeException;
+
 final class Dispatcher
 {
-    public function dispatch(array $match): void
+    public function dispatch(array $match, Request $request): void
     {
-        $handler = $match['handler'];
-        $params = $match['params'] ?? [];
+        $route = $match['handler'];
+        $routeParams = $match['params'] ?? [];
 
-        $controllerClass = $handler['controller'];
-        $action = $handler['action'];
+        $controllerClass = $route['controller'];
+        $action = $route['action'];
 
         if (!class_exists($controllerClass)) {
-            http_response_code(500);
-            echo 'Controller class not found.';
-            return;
+            throw new RuntimeException(
+                "Controller not found: {$controllerClass}"
+            );
         }
 
         $controller = new $controllerClass();
 
         if (!is_callable([$controller, $action])) {
-            http_response_code(500);
-            echo 'Controller action not found.';
+            throw new RuntimeException(
+                "Controller action not found: {$controllerClass}::{$action}"
+            );
+        }
+
+        $method = new ReflectionMethod($controller, $action);
+        $arguments = [];
+
+        foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if (
+                $type instanceof ReflectionNamedType
+                && !$type->isBuiltin()
+                && $type->getName() === Request::class
+            ) {
+                $arguments[] = $request;
+                continue;
+            }
+
+            $name = $parameter->getName();
+
+            if (array_key_exists($name, $routeParams)) {
+                $arguments[] = $routeParams[$name];
+                continue;
+            }
+
+            if ($parameter->isDefaultValueAvailable()) {
+                $arguments[] = $parameter->getDefaultValue();
+                continue;
+            }
+
+            throw new RuntimeException(
+                "Cannot resolve controller parameter: {$name}"
+            );
+        }
+
+        $result = $method->invokeArgs($controller, $arguments);
+
+        if (is_array($result)) {
+            header('Content-Type: application/json; charset=utf-8');
+
+            echo json_encode(
+                $result,
+                JSON_THROW_ON_ERROR
+            );
+
             return;
         }
 
-        $result = $controller->$action(...array_values($params));
-
         if (is_string($result)) {
             echo $result;
-        } elseif ($result !== null) {
-            http_response_code(500);
-            echo 'Controller returned an unsupported response.';
         }
     }
 }
