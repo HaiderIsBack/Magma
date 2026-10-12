@@ -3,9 +3,10 @@
 namespace Magma\Http;
 
 use Attribute;
+use Magma\Http\Route;
 
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]  
-class Post extends Route {
+final class Post extends Route {
     public function __construct
     (
         public string $path

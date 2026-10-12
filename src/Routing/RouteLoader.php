@@ -7,6 +7,9 @@ use Magma\Routing\Route;
 use Magma\Http\Group;
 use Magma\Http\Get;
 use Magma\Http\Post;
+use Magma\Http\Put;
+use Magma\Http\Patch;
+use Magma\Http\Delete;
 use RuntimeException;
 
 final class RouteLoader
@@ -18,6 +21,9 @@ final class RouteLoader
         $attributeMappings = [
             Get::class => 'GET',
             Post::class => 'POST',
+            Put::class => 'PUT',
+            Patch::class => 'PATCH',
+            Delete::class => 'DELETE',
         ];
 
         foreach ($controllers as $controller) {
