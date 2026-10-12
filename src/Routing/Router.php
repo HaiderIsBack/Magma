@@ -76,6 +76,8 @@ final class Router
             return null;
         }
 
+        $path = rtrim($path, '/');
+
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
                 continue;
@@ -108,7 +110,9 @@ final class Router
     }
 
     /**
-     * Convert /users/{id} into a regular expression.
+     * Convert /users/{id} or /users/:id into a regular expression.
+     *
+     * @return array{0: string, 1: array<int, string>}
      */
     private function compilePath(string $path): array
     {
@@ -117,7 +121,7 @@ final class Router
         $offset = 0;
 
         preg_match_all(
-            '/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/',
+            '/\{([a-zA-Z_][a-zA-Z0-9_]*)\}|:([a-zA-Z_][a-zA-Z0-9_]*)/',
             $path,
             $matches,
             PREG_OFFSET_CAPTURE
@@ -125,12 +129,10 @@ final class Router
 
         foreach ($matches[0] as $index => $match) {
             [$placeholder, $position] = $match;
-            $name = $matches[1][$index][0];
 
-            $pattern .= preg_quote(
-                substr($path, $offset, $position - $offset),
-                '#'
-            );
+            $name = $matches[1][$index][0] !== ''
+                ? $matches[1][$index][0]
+                : $matches[2][$index][0];
 
             if (in_array($name, $parameters, true)) {
                 throw new \InvalidArgumentException(
@@ -138,7 +140,13 @@ final class Router
                 );
             }
 
+            $pattern .= preg_quote(
+                substr($path, $offset, $position - $offset),
+                '#'
+            );
+
             $pattern .= '(?P<' . $name . '>[^/]+)';
+
             $parameters[] = $name;
             $offset = $position + strlen($placeholder);
         }
