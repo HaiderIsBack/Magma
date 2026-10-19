@@ -76,7 +76,7 @@ final class Router
             return null;
         }
 
-        $path = rtrim($path, '/');
+        $path = rtrim($path, '/') ?: '/';
 
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
