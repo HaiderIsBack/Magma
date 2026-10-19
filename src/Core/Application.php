@@ -4,6 +4,10 @@ namespace Magma\Core;
 
 final class Application {
     public static function run() {
+        if (!defined('APP_ROOT')) {
+            throw new \RuntimeException("APP_ROOT is not defined");
+        }
+
         $router = new \Magma\Routing\Router();
 
         $cache = new \Magma\Routing\RouteCache(
