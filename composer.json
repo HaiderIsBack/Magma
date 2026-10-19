@@ -1,8 +1,10 @@
 {
     "name": "rolog/magma",
+    "description": "Lightweight, FastAPI convention based and agile PHP framework for REST based apps",
     "require": {
         "php": "^8.0"
     },
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Magma\\": "src/"
