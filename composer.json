@@ -1,7 +1,7 @@
 {
     "name": "rolog/magma",
     "description": "Lightweight, FastAPI convention based and agile PHP framework for REST based apps",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "require": {
         "php": "^8.0"
     },
